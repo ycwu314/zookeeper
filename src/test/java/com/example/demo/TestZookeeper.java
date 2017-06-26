@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -61,6 +62,7 @@ public class TestZookeeper extends DemoApplicationTests {
         Assert.assertArrayEquals(newData.getBytes(), client.getData().forPath(path));
 
         client.delete().deletingChildrenIfNeeded().forPath(path);
+        // checkExists() : if not null the return a Stat object, otherwise return null
         Assert.assertNull(client.checkExists().forPath(path));
 
     }
@@ -149,22 +151,26 @@ public class TestZookeeper extends DemoApplicationTests {
             log.info("got node change..");
             nodeChangeEventCounter.incrementAndGet();
         });
-        nodeCache.start(true);
 
-        IntStream.range(0, nodeChangeTimes).forEach(i -> {
-            try {
-                client.setData().forPath(path, String.valueOf(i).getBytes());
-                log.info("current node data={}", new String(nodeCache.getCurrentData().getData()));
+        try {
+            nodeCache.start(true);
 
-                if (sleep) {
-                    Thread.sleep(1000L);
+            IntStream.range(0, nodeChangeTimes).forEach(i -> {
+                try {
+                    client.setData().forPath(path, String.valueOf(i).getBytes());
+                    log.info("current node data={}",
+                        new String(nodeCache.getCurrentData().getData()));
+
+                    if (sleep) {
+                        Thread.sleep(1000L);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        nodeCache.close();
+            });
+        } finally {
+            nodeCache.close();
+        }
     }
 
     /**
@@ -185,23 +191,25 @@ public class TestZookeeper extends DemoApplicationTests {
                 event.getData().getPath());
         });
         pathChildrenCache.rebuild();
-        pathChildrenCache.start();
 
-        String child = path + "/" + UUID.randomUUID().toString();
-        client.create().creatingParentsIfNeeded()
-            .forPath(child, "aaa".getBytes());
-        Thread.sleep(100L);
+        try {
+            pathChildrenCache.start();
 
-        client.setData().forPath(child, "bbb".getBytes());
-        Thread.sleep(100L);
+            String child = path + "/" + UUID.randomUUID().toString();
+            client.create().creatingParentsIfNeeded()
+                .forPath(child, "aaa".getBytes());
+            Thread.sleep(100L);
 
-        client.delete().forPath(child);
-        Thread.sleep(100L);
+            client.setData().forPath(child, "bbb".getBytes());
+            Thread.sleep(100L);
 
-        client.delete().deletingChildrenIfNeeded().forPath(path);
+            client.delete().forPath(child);
+            Thread.sleep(100L);
 
-        pathChildrenCache.close();
-
+            client.delete().deletingChildrenIfNeeded().forPath(path);
+        } finally {
+            pathChildrenCache.close();
+        }
     }
 
     ////////////////////////////////////////////////////////////////////
