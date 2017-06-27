@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
  * Created by Administrator on 2017/6/22 0022.
  */
 @Slf4j
-public class TestZookeeper extends DemoApplicationTests {
+public class TestZKNodeAndWatch extends DemoApplicationTests {
 
     @Value("${zoo.serverList}")
     private String serverList;
