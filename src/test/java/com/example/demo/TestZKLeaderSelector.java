@@ -68,7 +68,7 @@ public class TestZKLeaderSelector extends DemoApplicationTests {
             clientList.add(client);
 
             /**
-             * LeaderSelectorListenerAdapter handles {@link org.apache.curator.framework.state.ConnectionState.SUSPENDED} and {@link org.apache.curator.framework.state.ConnectionState.LOST}
+             * {@link org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter}  handles {@link org.apache.curator.framework.state.ConnectionState.SUSPENDED} and {@link org.apache.curator.framework.state.ConnectionState.LOST}
              */
             LeaderSelector leaderSelector = new LeaderSelector(client, MUTEX_LEADER_PATH,
                 new LeaderSelectorListenerAdapter() {
