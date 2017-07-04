@@ -11,8 +11,10 @@ import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import org.apache.zookeeper.data.Stat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,6 +66,23 @@ public class TestZKNodeAndWatch extends DemoApplicationTests {
         client.delete().deletingChildrenIfNeeded().forPath(path);
         // checkExists() : if not null the return a Stat object, otherwise return null
         Assert.assertNull(client.checkExists().forPath(path));
+
+    }
+
+    @Test(expected = BadVersionException.class)
+    public void testSetByVersion() throws Exception {
+        String path = PATH_PREFIX + "set_by_version";
+        if (client.checkExists().forPath(path) != null) {
+            client.delete().deletingChildrenIfNeeded().forPath(path);
+        }
+
+        client.create().creatingParentsIfNeeded().forPath(path, "aa".getBytes());
+
+        Stat stat = client.setData().withVersion(0).forPath(path, "bb".getBytes());
+        Assert.assertEquals(1, stat.getVersion());
+
+        // throw exception
+        client.setData().withVersion(999).forPath(path, "999".getBytes());
 
     }
 
