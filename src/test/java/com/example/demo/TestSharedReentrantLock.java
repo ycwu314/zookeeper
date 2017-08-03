@@ -60,8 +60,8 @@ public class TestSharedReentrantLock extends DemoApplicationTests {
                 InterProcessMutex lock = new InterProcessMutex(client, LOCK_PATH);
                 try {
                     countDownLatch.await();
-                    lock.acquire(100L, TimeUnit.MICROSECONDS);
-
+                    lock.acquire();
+                    Thread.sleep(2000L);
                     log.info("thread {} got the lock", i);
                     resource.addAndGet(i);
                 } catch (InterruptedException e) {
@@ -87,7 +87,7 @@ public class TestSharedReentrantLock extends DemoApplicationTests {
         log.info("resource={}", resource.get());
 
         executorService.shutdown();
-        executorService.awaitTermination(1L, TimeUnit.SECONDS);
+        executorService.awaitTermination(20L, TimeUnit.SECONDS);
     }
 
 
