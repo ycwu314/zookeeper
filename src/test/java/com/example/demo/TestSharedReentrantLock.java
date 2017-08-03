@@ -61,7 +61,7 @@ public class TestSharedReentrantLock extends DemoApplicationTests {
                 try {
                     countDownLatch.await();
                     lock.acquire();
-                    Thread.sleep(2000L);
+                    Thread.sleep(1000L);
                     log.info("thread {} got the lock", i);
                     resource.addAndGet(i);
                 } catch (InterruptedException e) {
@@ -82,12 +82,10 @@ public class TestSharedReentrantLock extends DemoApplicationTests {
 
         countDownLatch.countDown();
 
-        Thread.sleep(1000L);
+        executorService.shutdown();
+        executorService.awaitTermination(15L, TimeUnit.SECONDS);
 
         log.info("resource={}", resource.get());
-
-        executorService.shutdown();
-        executorService.awaitTermination(20L, TimeUnit.SECONDS);
     }
 
 
